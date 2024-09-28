@@ -1,0 +1,21 @@
+local { crypto, json } = require "*"
+
+local function process_data()
+	if js_invoke("get_uploaded") then
+		local key <const> = "LEO-ALEC\tEO-ALEC"
+		local iv <const> = "\49\50\70\71\66\51\54\45\76\69\51\45\113\61\57\0"
+		local data = io.contents("lastData.dat")
+					|> crypto.decrypt|"aes-cbc-pkcs7", key, iv|
+					|> json.decode|json.withnull + json.withorder|
+		if data.InventoryJson then
+			data = json.decode(data.InventoryJson, json.withnull + json.withorder)
+		end
+		document.querySelector("textarea").value = json.encode(data, true)
+	end
+end
+
+process_data() -- Check if a file was already uploaded, e.g. when page is closed and re-opened, the form is remembered, but the script is restarted.
+
+document.querySelector("input"):addEventListener("change", function()
+	process_data()
+end)
